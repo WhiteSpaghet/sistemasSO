@@ -14,3 +14,12 @@ export default function LandingPage() {
     </div>
   );
 }
+const panelStyle = {
+background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+padding: 12,
+borderRadius: 12,
+border: '1px solid rgba(255,255,255,0.03)'
+};
+const cardSmallStyle = {
+background:'#041018', padding:10, borderRadius:10, border:'1px solid rgba(255,255,255,0.02)', display:'flex', justifyContent:'space-between', alignItems:'center'
+};

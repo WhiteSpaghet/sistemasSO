@@ -1,61 +1,68 @@
-// frontend/src/pages/ClientePage.jsx
-import { useState, useEffect } from "react";
-import MapaSimple from "../components/MapaSimple";
-import ListaViajes from "../components/ListaViajes";
-import { solicitarViaje, getEstadoCliente } from "../api/clienteApi";
+export function ClientePage({ accent = '#FF7A59', formatMoney = (v) => String(v) }){
+const [resumen, setResumen] = useState(null);
+const [loading, setLoading] = useState(true);
+const [error, setError] = useState(null);
 
-const CLIENTE_ID = 1; // simplificado
 
-export default function ClientePage() {
-  const [origen, setOrigen] = useState({ x: 1, y: 1 });
-  const [destino, setDestino] = useState({ x: 5, y: 5 });
-  const [estado, setEstado] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [mensaje, setMensaje] = useState("");
+useEffect(()=>{
+let mounted = true;
+(async ()=>{
+try{
+const r = await fetch('http://localhost:5000/api/status/resumen');
+if(!r.ok) throw new Error(`${r.status} ${r.statusText}`);
+const j = await r.json();
+if(mounted) setResumen(j);
+}catch(e){ if(mounted) setError(String(e)); }
+finally{ if(mounted) setLoading(false); }
+})();
+return ()=>{ mounted=false };
+},[]);
 
-  const pedirTaxi = async () => {
-    setLoading(true);
-    setMensaje("");
-    try {
-      const res = await solicitarViaje(CLIENTE_ID, origen, destino);
-      if (res.ok) {
-        setMensaje(`Viaje creado con id ${res.viajeId}`);
-      } else {
-        setMensaje("Error al solicitar viaje");
-      }
-    } catch (e) {
-      setMensaje("Error de red");
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    const id = setInterval(async () => {
-      try {
-        const est = await getEstadoCliente(CLIENTE_ID);
-        setEstado(est);
-      } catch (e) {
-        // nada
-      }
-    }, 1000);
-    return () => clearInterval(id);
-  }, []);
+// Ejemplo de pantalla cliente: mostrar viajes pendientes y coste estimado
+const pendientes = resumen?.viajes_pendientes ?? 0;
+const costeEstimado = resumen?.coste_medio_viaje ? (pendientes * resumen.coste_medio_viaje) : resumen?.importe_pendiente_total ?? 0;
 
-  return (
-    <div>
-      <h2>Modo Cliente</h2>
-      <MapaSimple
-        origen={origen}
-        destino={destino}
-        onChangeOrigen={setOrigen}
-        onChangeDestino={setDestino}
-      />
-      <button onClick={pedirTaxi} disabled={loading}>
-        {loading ? "Solicitando..." : "Solicitar taxi"}
-      </button>
-      <p>{mensaje}</p>
-      <ListaViajes estado={estado} />
-    </div>
-  );
+
+return (
+<div>
+<div style={{ display:'flex', gap:12, marginBottom:12 }}>
+<div style={panelStyle}>
+<div style={{ color:'#AAB4C1' }}>Viajes pendientes</div>
+<div style={{ fontSize:18, fontWeight:800, marginTop:6 }}>{loading ? '—' : pendientes}</div>
+<div style={{ color:'#98A3B0', marginTop:8 }}>Número de solicitudes aún sin asignar</div>
+</div>
+
+
+<div style={panelStyle}>
+<div style={{ color:'#AAB4C1' }}>Coste estimado</div>
+<div style={{ fontSize:18, fontWeight:800, marginTop:6, color:accent }}>{loading ? '—' : formatMoney(costeEstimado)}</div>
+<div style={{ color:'#98A3B0', marginTop:8 }}>Suma estimada para los viajes pendientes</div>
+</div>
+</div>
+
+
+<div style={{ marginTop:8 }}>
+<h3 style={{ margin:0, marginBottom:8 }}>Últimos viajes</h3>
+<div style={{ display:'grid', gap:8 }}>
+{/* Si el backend ofreciera una lista, la renderizaríamos; aquí mostramos placeholders si no hay lista */}
+{(resumen?.ultimos_viajes && resumen.ultimos_viajes.length>0) ? resumen.ultimos_viajes.map((v,i)=> (
+<div key={i} style={{ background:'#041018', padding:10, borderRadius:8 }}>
+<div style={{ fontWeight:700 }}>{v.origen} → {v.destino}</div>
+<div style={{ color:'#AAB4C1', fontSize:13 }}>{formatMoney(v.importe)}</div>
+</div>
+)) : <div style={{ color:'#98A3B0' }}>No hay viajes recientes.</div>}
+</div>
+</div>
+</div>
+);
 }
+const panelStyle = {
+background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
+padding: 12,
+borderRadius: 12,
+border: '1px solid rgba(255,255,255,0.03)'
+};
+const cardSmallStyle = {
+background:'#041018', padding:10, borderRadius:10, border:'1px solid rgba(255,255,255,0.02)', display:'flex', justifyContent:'space-between', alignItems:'center'
+};
