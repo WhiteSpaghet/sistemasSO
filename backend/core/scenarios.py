@@ -7,7 +7,8 @@ from typing import Optional
 from .dispatcher import Dispatcher
 from .models import Taxi, Cliente
 from .clock import SimulatedClock
-from backend import config as cfg
+import config as cfg
+
 
 
 class TaxiThread(threading.Thread):

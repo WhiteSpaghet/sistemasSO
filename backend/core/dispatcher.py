@@ -7,7 +7,8 @@ from typing import Dict, Tuple, Optional, List
 
 from .models import Taxi, Cliente, Viaje
 from .clock import SimulatedClock
-from backend import config as cfg
+import config as cfg
+
 
 
 class Dispatcher:

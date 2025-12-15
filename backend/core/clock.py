@@ -2,7 +2,7 @@
 import time
 from datetime import datetime, timedelta
 from . import models  # para que el paquete sea reconocido
-from backend import config as cfg
+import config as cfg
 
 
 class SimulatedClock:
